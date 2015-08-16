@@ -56,6 +56,11 @@ def show_help():
    print " |"
    print " |-- @author Eduardo B R <eduardo@root404.com>"
    print " |-- @license MIT"
+   print " |-- @github /0oeduardoo0/turanga"
+   print ""
+   print "     turanga encode <file_or_dir> <password> <optional_output_dir>"
+   print ""
+   print "     turanga decode <turanga_output_folder> <password> <optional_output_dir>"
    print ""
    sys.exit()
 
