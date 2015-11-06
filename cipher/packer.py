@@ -43,6 +43,6 @@ def unpack(source, key):
    
 
    file_name = algorithm.decode(file_name, key)
-   content = algorithm.decode(content, key)
+   content = algorithm.decode(content.strip(), key)
 
    return True, None, file_name, content
