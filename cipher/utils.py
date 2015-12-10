@@ -39,7 +39,7 @@ def dir_scan(_dir):
       @return void
 """
 def open_file_error(file):
-   print " ~ Can not open %s" % (file)
+   print " ~ [FAIL] Can not open %s" % (file)
 
 
 """
@@ -54,7 +54,7 @@ def open_file_error(file):
 """
 def open_file(file):
    try:
-      file_obj = open(file)
+      file_obj = open(file, "rb")
       result = file_obj.read()
       file_obj.close()
       return result
@@ -72,7 +72,7 @@ def open_file(file):
       @param string content : content to write
 """
 def write_file(file, content):
-   output_file = open(file, 'w')
+   output_file = open(file, "wb")
       
    output_file.truncate()
    output_file.write(content)

@@ -1,39 +1,61 @@
 # -*- coding: utf-8 -*-
 
 import hashlib
-from . import algorithm
+from lxml import etree
+from . import algorithm 
 
 INVALID_FILE_ERR = 0
 INVALID_KEY_ERR = 1
 
-def pack(file, source, key):
+def pack(file_name, file_data, key):
 
-   hashed = hashlib.md5(file).hexdigest()
+   hashed = hashlib.md5(file_name).hexdigest()
 
    # These 3 bytes indicates that this file is Turanga's encryption
-   data  = 'trg.'
-   # Encode a known piece of data to the decoder be able to verify the key
-   data += algorithm.encode('_ALL_OK_', key) + '.'
-   # encode the original file name
-   data += algorithm.encode(file, key) + '.'
+   data  = '<?xml version="1.0"?>\n'
+   data += '<trg version="2.1">\n'
 
-   data += algorithm.encode(source, key)
+   data += '\t<vkey>'
+   # Encode a known piece of data to the decoder be able to verify the key
+   data += algorithm.encode('_ALL_OK_', key)
+   data += '</vkey>\n'
+
+   data += '\t<name>'
+   # encode the original file name
+   data += algorithm.encode(file_name, key)
+   data += '</name>\n'
+
+   data += '\t<data>'
+   data += algorithm.encode(file_data, key)
+   data += '</data>\n'
+
+   data += '</trg>'
 
    return hashed, data
 
 
 def unpack(source, key):
 
-   # checking the first 3 bytes to know the type of file, 
-   # to know if it is a Turanga's encryption
-   if not source[0:3] == 'trg':
+   parser = etree.XMLParser(recover=True)
+
+#   try:
+   root = etree.fromstring(source, parser=parser)
+#   except:
+#      return False, INVALID_FILE_ERR, None, None
+
+   if root.tag != "trg":
       return False, INVALID_FILE_ERR, None, None
 
-   trg, verify_key, file_name, content = source.split('.')
+   for element in root:
+      if element.tag == "vkey":
+         verify_key = element.text
+      elif element.tag == "name":
+         file_name = element.text
+      elif element.tag == "data":
+         content = element.text
 
    try:
       verify_key = algorithm.decode(verify_key, key)
-
    except:
       return False, INVALID_KEY_ERR, None, None
 

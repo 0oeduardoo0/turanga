@@ -8,8 +8,22 @@ from time import time
 from cipher import packer
 from cipher import utils
 
-# for benchmark
-start_time = time()
+def get_key():
+   print ""
+   key = ""
+
+   # to prevent an empty key
+   while key == "":
+      key  = getpass.getpass(" ~ Key: ")
+      vkey = getpass.getpass(" ~ Confirm Key: ")
+
+      if key != vkey:
+         print "\n ~ [FAIL] Keys do not match!\n"
+         key = ""
+
+   print ""
+
+   return key
 
 """
       argv_error(argument)
@@ -33,7 +47,7 @@ def argv_error(argument):
 """
 def show_help():
    print ""
-   print " |-- Turanga 2.0"
+   print " |-- Turanga 2.1"
    print " |"
    print " |-- Simple and secure encryption tool"
    print " |"
@@ -41,9 +55,9 @@ def show_help():
    print " |-- @license MIT"
    print " |-- @github /0oeduardoo0/turanga"
    print ""
-   print "     turanga encode, e <file_or_dir> <optional_output_dir>"
+   print "     turanga --encode, -e <file_or_dir> <optional_output_dir>"
    print ""
-   print "     turanga decode, d <turanga_output_folder> <optional_output_dir>"
+   print "     turanga --decode, -d <turanga_output_folder> <optional_output_dir>"
    print ""
    sys.exit()
 
@@ -66,30 +80,15 @@ try:
       except:
          output_dir = 'turanga_output'
 
-      print "|-- Turanga 2.0"
-      print ""
-
-      key = ""
-
-      # to prevent an empty key
-      while key == "":
-         key  = getpass.getpass(" ~ Key: ")
-         vkey = getpass.getpass(" ~ Confirm Key: ")
-
-         if key != vkey:
-            print "\n ~ [FAIL] Keys do not match!\n"
-            key = ""
-
-      print ""
-
       command = sys.argv[1]
       file_or_dir = sys.argv[2]
 
       files = []
       wbytes = 0 # written bytes
       rbytes = 0 # readed bytes
+      efiles = 0 # encoded files counter
 
-      if command == 'encode' or command == 'e':
+      if command == '--encode' or command == '-e':
 
          if not os.path.isdir(file_or_dir):
             files.append(file_or_dir)
@@ -101,6 +100,13 @@ try:
          if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
+         key = get_key()
+
+         print " ~ Wait please..."
+
+         # for benchmark
+         start_time = time()
+
          for file in files:
 
             source = utils.open_file(file)
@@ -108,34 +114,41 @@ try:
             if source == False:
                continue
 
-            result = ''
-            output = ''
+            efiles += 1
+            result  = ''
+            output  = ''
 
             wbytes += len(source)
 
-            print " ~ Encoding %s..." % (file[0:60])
-            hashed, result = packer.pack(file, source, key) # allahu akbar LoL
+            if len(file) > 30:
+               print " ~ Encoding : %s..." % (file[0:30])
+            else:
+               print " ~ Encoding : %s..." % (file.ljust(30, '.'))
 
+            hashed, result = packer.pack(file, source, key) # allahu akbar LoL
             rbytes += len(result)
 
-            utils.write_file(os.path.join(output_dir, hashed), result)
+            output_file = os.path.join(output_dir, hashed)
+            utils.write_file(output_file, result)
+
+            print " ~ Saved on : %s...%s [OK]" % (output_file[0:25], output_file[len(output_file)-5:len(output_file)])
 
          print ""
          print " ~ Done"
          print ""
-         print " ~ Encode %s files" % (len(files))
-         print " ~ Read  %s KBytes" % (wbytes / 100)
-         print " ~ Write %s KBytes" % (rbytes / 100)
+         print " ~ Encode %s files" % (efiles)
+         print " ~ Read  %0.2f KBytes" % (wbytes / 100.0)
+         print " ~ Write %0.2f KBytes" % (rbytes / 100.0)
 
          if wbytes > 0:
-            print " ~ Total bulking %s%%" % ((rbytes * 100) / wbytes)
+            print " ~ Total bulking %0.2f%%" % (((rbytes * 100.0) / wbytes) - 100.0)
 
          print " ~ Elapsed time %0.2f seconds" % (time() - start_time)
          print ""
          print " ~ Output writed on %s\n" % (output_dir)
 
 
-      elif command == 'decode' or command == 'd':
+      elif command == '--decode' or command == '-d':
 
          if not os.path.isdir(file_or_dir):
             files.append(file_or_dir)
@@ -148,6 +161,13 @@ try:
             os.makedirs(output_dir)
 
          file_counter = 0
+
+         key = get_key()
+
+         print " ~ Wait please..."
+
+         # for benchmark
+         start_time = time()
 
          for _file in files:
 
@@ -180,7 +200,10 @@ try:
 
             output_file_dir = os.path.dirname(file)
 
-            print "Saved %s..." % (file[0:30]),
+            if len(file) > 30:
+               print "Saved %s..." % (file[0:30]),
+            else:
+               print "Saved %s..." % (file.ljust(30, '.')),
          
             if not os.path.exists(output_file_dir):
                os.makedirs(output_file_dir)
@@ -196,11 +219,11 @@ try:
          print ""
          print " ~ Scanning %s files" % (len(files))
          print " ~ Decode %s files" % (file_counter)
-         print " ~ Read  %s KBytes" % (wbytes / 100)
-         print " ~ Write %s KBytes" % (rbytes / 100)
+         print " ~ Read  %0.2f KBytes" % (wbytes / 100.0)
+         print " ~ Write %0.2f KBytes" % (rbytes / 100.0)
       
          if wbytes > 0:
-            print " ~ %s%% of encoded volume" % ((rbytes * 100) / wbytes)
+            print " ~ %0.2f%% of encoded volume" % ((rbytes * 100.0) / wbytes)
 
          if(file_counter < len(files)):
             print " ~ Some files was not decoded, maybe, a bad key was used"

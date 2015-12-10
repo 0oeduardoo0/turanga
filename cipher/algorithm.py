@@ -25,13 +25,13 @@ def encode(data, key):
     if key_index >= keysize:
       key_index = 0
          
-    result = ord(character) + ord(key[key_index])
+    result = (ord(character) + ord(key[key_index])) % 256
          
-    output += str(hex(result)).replace('0x','').zfill(3)
+    output += chr(result)
          
     key_index += 1
 
-  return output.strip()
+  return output.encode("base64").replace("\n","")
 
 """
       encode(data, key)
@@ -45,6 +45,8 @@ def encode(data, key):
 """     
 def decode(data, key):
 
+  data = data.decode("base64")
+
   # we need get the hash
   key = sha256(key).hexdigest()
   
@@ -55,17 +57,13 @@ def decode(data, key):
 
   count = 0
 
-  while count < txtsize:
+  for character in data:
     if key_index >= keysize:
       key_index = 0
 
-    character = data[count:count + 3] # read 3 chars
-
-    result = int(character, 16) - ord(key[key_index])
-            
+    result = (ord(character) - ord(key[key_index])) % 256
     output += chr(result)
          
     key_index += 1
-    count += 3
          
-  return output.strip()
+  return output
